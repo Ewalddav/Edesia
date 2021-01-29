@@ -12,9 +12,9 @@ class CookbooksCrawler(Crawler):
     _urlMin = 1
     _sleepTime = 1
 
-    def scrape(self, urls):
+    def scrape(self):
         recipes = []
-        for url in urls:
+        for url in self._urls:
             try:
                 if MongoHelper.getRecipeByUrl(url).count() > 0:
                     print('Recipe is already in DB for URL:{}'.format(url))

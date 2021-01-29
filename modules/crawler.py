@@ -11,28 +11,32 @@ class Crawler(object):
     _urlMax = 1000000
     _urlMin = 1
     _sleepTime = 2
+    _urls = []
 
     def __init__(self, website):
         self.website = website
 
     def start(self):
-        urls = self.crawl()
-        self.scrape(urls)
+        self.crawl()
+        self.scrape()
 
     def crawl(self):
-        urls = []
         for i in range(self._urlMin, self._urlMax): # Picking psuedo random numbers to get recipes
-            urls.append(self.website.baseUrl + self.website.recipeUrl + str(i))
-        return urls
+            self._urls.append(self.website.baseUrl + self.website.recipeUrl + str(i))
         
-    def scrape(self, urls):
+    def scrape(self):
         recipes = []
-        for url in urls:
+        for url in self._urls:
             if MongoHelper.getRecipeByUrl(url).count() > 0:
                 print('Recipe is already in DB for URL:{}'.format(url))
                 continue
 
-            scraper = scrape_me(url)
+            try:    
+                scraper = scrape_me(url)
+            except Exception as e:
+                    print('Could not parse as recipe, exception: {}'.format(e))
+                    time.sleep(self._sleepTime)
+                    continue
             
             name = scraper.title()
             
@@ -49,8 +53,10 @@ class Crawler(object):
             ingredients = scraper.ingredients()
 
             directions = scraper.instructions()
+
+            ratings = scraper.ratings()
             
-            recipe = {'name': name, 'url': url, 'ingredients': ingredients, 'directions': directions, 'servingCount': servingCount, 'image': image, 'totalTime': totalTime, 'sourceName': self.website.name}
+            recipe = {'name': name, 'url': url, 'ingredients': ingredients, 'directions': directions, 'servingCount': servingCount, 'image': image, 'totalTime': totalTime, 'sourceName': self.website.name, 'ratings': ratings}
 
             recipes.append(recipe)
             print('Scraped Recipe: {}, from URL: {}, RecipeBatch#: {}'.format(name, url, len(recipes)))
