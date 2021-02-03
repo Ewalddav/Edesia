@@ -1,4 +1,4 @@
-import multiprocessing
+from multiprocessing import Process
 
 from modules.crawler import Crawler
 from modules.website import Website
@@ -13,7 +13,7 @@ class Edesia(object):
         processes = []
 
         for crawler in self.crawlers:
-            p = multiprocessing.Process(target=crawler.begin, args=())
+            p = Process(target=crawler.begin, args=())
             processes.append(p)
             p.start()
         
@@ -33,4 +33,3 @@ class Edesia(object):
 if __name__ == '__main__':
     edesia = Edesia()
     edesia.run()
-     

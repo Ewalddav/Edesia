@@ -20,6 +20,7 @@ class Crawler(object):
         self.crawl()
         self.scrape()
 
+    # this method use bfs to crawl all the websites into _urls field
     def crawl(self):
         self._urls.add(self.website.baseUrl)
         self._queue.append(self.website.baseUrl)
