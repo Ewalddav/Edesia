@@ -11,7 +11,7 @@ class Crawler(object):
     _sleepTime = 1
     # _url is the visited links for the bfs
     _urls = set()
-    queue = []
+    _queue = []
 
     def __init__(self, website):
         self.website = website
@@ -22,10 +22,10 @@ class Crawler(object):
 
     def crawl(self):
         self._urls.add(self.website.baseUrl)
-        self.queue.append(self.website.baseUrl)
-        while self.queue:
+        self._queue.append(self.website.baseUrl)
+        while self._queue:
             try:
-                href = self.queue.pop(0)
+                href = self._queue.pop(0)
                 print('Popped from queue: ', href)
                 html_page = requests.get(href)
                 soup = BeautifulSoup(html_page.text, 'html.parser')
@@ -34,7 +34,7 @@ class Crawler(object):
                     hrefNeighbor = link.get('href')
                     if hrefNeighbor and hrefNeighbor.find(self.website.baseUrl) == 0 and hrefNeighbor not in self._urls:
                         self._urls.add(hrefNeighbor)
-                        self.queue.append(hrefNeighbor)
+                        self._queue.append(hrefNeighbor)
             except Exception as e:
                 print('Exception encountered while crawling: ', e)
                 continue
