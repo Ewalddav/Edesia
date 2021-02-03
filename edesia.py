@@ -13,7 +13,7 @@ class Edesia(object):
         processes = []
 
         for crawler in self.crawlers:
-            p = multiprocessing.Process(target=crawler.begin, args=[])
+            p = multiprocessing.Process(target=crawler.begin, args=())
             processes.append(p)
             p.start()
         

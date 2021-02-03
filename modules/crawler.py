@@ -1,34 +1,31 @@
 import time
 import requests
-from queue import Queue
 
 from bs4 import BeautifulSoup
 from recipe_scrapers import scrape_me
 
 from modules.mongoHelper import MongoHelper
-from modules.parsingHelper import ParsingHelper
-from modules.recipe import Recipe
 
 class Crawler(object):
     _recipeBuffer = 100
-    _sleepTime = 2
+    _sleepTime = 1
     # _url is the visited links for the bfs
     _urls = set()
-    queue = Queue()
+    queue = []
 
     def __init__(self, website):
         self.website = website
-        self.queue.put(self.website.baseUrl)
-        self._urls.add(self.website.baseUrl)
 
-    def start(self):
+    def begin(self):
         self.crawl()
         self.scrape()
 
     def crawl(self):
-        while not self.queue.empty():
+        self._urls.add(self.website.baseUrl)
+        self.queue.append(self.website.baseUrl)
+        while self.queue:
             try:
-                href = self.queue.get()
+                href = self.queue.pop(0)
                 print('Popped from queue: ', href)
                 html_page = requests.get(href)
                 soup = BeautifulSoup(html_page.text, 'html.parser')
@@ -37,7 +34,7 @@ class Crawler(object):
                     hrefNeighbor = link.get('href')
                     if hrefNeighbor and hrefNeighbor.find(self.website.baseUrl) == 0 and hrefNeighbor not in self._urls:
                         self._urls.add(hrefNeighbor)
-                        self.queue.put(hrefNeighbor)
+                        self.queue.append(hrefNeighbor)
             except Exception as e:
                 print('Exception encountered while crawling: ', e)
                 continue
