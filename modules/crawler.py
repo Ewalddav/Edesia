@@ -1,4 +1,9 @@
 import time
+<<<<<<< Updated upstream
+=======
+import requests
+from queue import Queue
+>>>>>>> Stashed changes
 
 from recipe_scrapers import scrape_me
 
@@ -11,18 +16,44 @@ class Crawler(object):
     _urlMax = 1000000
     _urlMin = 1
     _sleepTime = 2
+<<<<<<< Updated upstream
     _urls = []
+=======
+    # _url is the visited links for the bfs
+    _urls = set()
+    queue = Queue()
+>>>>>>> Stashed changes
 
     def __init__(self, website):
         self.website = website
+        self.queue.put(self.website.baseUrl)
+        self._urls.add(self.website.baseUrl)
 
     def start(self):
         self.crawl()
         self.scrape()
 
     def crawl(self):
+<<<<<<< Updated upstream
         for i in range(self._urlMin, self._urlMax): # Picking psuedo random numbers to get recipes
             self._urls.append(self.website.baseUrl + self.website.recipeUrl + str(i))
+=======
+        while not self.queue.empty():
+            try:
+                href = self.queue.get()
+                print('Popped from queue: ', href)
+                html_page = requests.get(href)
+                soup = BeautifulSoup(html_page.text, 'html.parser')
+                all_links = soup.find_all('a')
+                for link in all_links:
+                    hrefNeighbor = link.get('href')
+                    if hrefNeighbor and hrefNeighbor.find(self.website.baseUrl) == 0 and hrefNeighbor not in self._urls:
+                        self._urls.add(hrefNeighbor)
+                        self.queue.put(hrefNeighbor)
+            except Exception as e:
+                print('Exception encountered while crawling: ', e)
+                continue
+>>>>>>> Stashed changes
         
     def scrape(self):
         recipes = []

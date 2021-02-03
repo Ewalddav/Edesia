@@ -13,6 +13,7 @@ class Edesia(object):
         self.initCrawlers()
 
     def run(self):
+<<<<<<< Updated upstream
         jobs = []
         
         seriousEatsRecipes = Website('seriouseats', 'https://www.seriouseats.com/', '/recipes/')
@@ -36,6 +37,27 @@ class Edesia(object):
 
         seriousEatsRecipes = Website('seriouseats', 'http://www.seriouseats.com/', '/recipes/')
         self.crawlers.append(SeriousEatsCrawler(seriousEatsRecipes))
+=======
+        processes = []
+
+        for crawler in self.crawlers:
+            p = multiprocessing.Process(target=crawler.begin, args=[])
+            processes.append(p)
+            p.start()
+        
+        for p in processes:
+            p.join()
+
+    def initCrawlers(self):
+        allRecipes = Website('allrecipes', 'https://www.allrecipes.com', '/recipe/')
+        self.crawlers.append(Crawler(allRecipes))
+
+        foodRecipes = Website('food', 'https://www.food.com', '/recipe/')
+        self.crawlers.append(Crawler(foodRecipes))
+
+        seriousEatsRecipes = Website('seriouseats', 'https://www.seriouseats.com/', '/recipes/')
+        self.crawlers.append(Crawler(seriousEatsRecipes))
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     edesia = Edesia()
