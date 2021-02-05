@@ -1,3 +1,4 @@
+import datetime
 import time
 import requests
 
@@ -7,7 +8,7 @@ from recipe_scrapers import scrape_me
 from modules.mongoHelper import MongoHelper
 
 class Crawler(object):
-    _recipeBuffer = 100
+    _recipeBuffer = 50
     _sleepTime = 1
     # _url is the visited links for the bfs
     _urls = set()
@@ -43,40 +44,45 @@ class Crawler(object):
     def scrape(self):
         recipes = []
         for url in self._urls:
-            if MongoHelper.getRecipeByUrl(url).count() > 0:
-                print('Recipe is already in DB for URL:{}'.format(url))
+            try:
+                if MongoHelper.getRecipeByUrl(url).count() > 0:
+                    print('Recipe is already in DB for URL:{}'.format(url))
+                    continue
+        
+                scraper = scrape_me(url)
+                if not self._isRecipe(scraper):
+                    continue
+                
+                name = scraper.title()
+
+                ingredients = scraper.ingredients()
+
+                directions = scraper.instructions()
+
+                servingCount = scraper.yields()
+                
+                totalTime = scraper.total_time()
+                
+                image = scraper.image()
+
+                ratings = scraper.ratings()
+                
+                recipe = {'name': name, 'url': url, 'ingredients': ingredients, 'directions': directions, 
+                'servingCount': servingCount, 'image': image, 'totalTime': totalTime, 'sourceName': self.website.name, 
+                'ratings': ratings, 'scrapeTime': datetime.datetime.now(), 'language': self.website.language}
+
+                recipes.append(recipe)
+                print('Scraped Recipe: {}, from URL: {}, RecipeBatch#: {}'.format(name, url, len(recipes)))
+                
+                if len(recipes) >= self._recipeBuffer:
+                    recipeIds = MongoHelper.insertRecipes(recipes)
+                    recipes = []
+                    print('{} Recipes have been successfully written: {}'.format(Crawler._recipeBuffer, recipeIds))
+
+                time.sleep(self._sleepTime) # Sleeping between requests to avoid limit
+            except:
+                print('Could not parse url: ', url)
                 continue
-    
-            scraper = scrape_me(url)
-
-            if not self._isRecipe(scraper):
-                continue
-            
-            name = scraper.title()
-
-            ingredients = scraper.ingredients()
-
-            directions = scraper.instructions()
-
-            servingCount = scraper.yields()
-            
-            totalTime = scraper.total_time()
-            
-            image = scraper.image()
-
-            ratings = scraper.ratings()
-            
-            recipe = {'name': name, 'url': url, 'ingredients': ingredients, 'directions': directions, 'servingCount': servingCount, 'image': image, 'totalTime': totalTime, 'sourceName': self.website.name, 'ratings': ratings}
-
-            recipes.append(recipe)
-            print('Scraped Recipe: {}, from URL: {}, RecipeBatch#: {}'.format(name, url, len(recipes)))
-            
-            if len(recipes) >= self._recipeBuffer:
-                recipeIds = MongoHelper.insertRecipes(recipes)
-                recipes = []
-                print('{} Recipes have been successfully written: {}'.format(Crawler._recipeBuffer, recipeIds))
-
-            time.sleep(self._sleepTime) # Sleeping between requests to avoid limit
 
     def _isRecipe(self, scraper):
         name = scraper.title()

@@ -7,7 +7,7 @@ class MongoHelper(object):
     def insertRecipes(recipes):
         client = pymongo.MongoClient('mongodb://localhost:27017/')
         db = client.edesia
-        recipeIds = db.recipes.insert_many(recipes).inserted_ids
+        recipeIds = db.dirty_recipes.insert_many(recipes).inserted_ids
         client.close()
         return recipeIds
 
@@ -15,7 +15,7 @@ class MongoHelper(object):
     def getRecipeByUrl(url):
         client = pymongo.MongoClient('mongodb://localhost:27017/')
         db = client.edesia
-        recipe = db.recipes.find({"url": url})
+        recipe = db.dirty_recipes.find({"url": url})
         client.close()
         return recipe
 
@@ -23,7 +23,7 @@ class MongoHelper(object):
     def getRecipeById(recipe_id):
         client = pymongo.MongoClient('mongodb://localhost:27017/')
         db = client.edesia
-        recipe = db.recipes.find_one({"_id": ObjectId(recipe_id)})
+        recipe = db.dirty_recipes.find_one({"_id": ObjectId(recipe_id)})
         client.close()
         return recipe
 

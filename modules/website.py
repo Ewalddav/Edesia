@@ -1,5 +1,5 @@
 class Website(object):
-    def __init__(self, name, baseUrl, recipeUrl):
+    def __init__(self, name, baseUrl, language):
         self.name = name
         self.baseUrl = baseUrl
-        self.recipeUrl = recipeUrl
+        self.language = language
