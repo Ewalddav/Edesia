@@ -5,15 +5,13 @@ from bs4 import BeautifulSoup
 from recipe_scrapers import scrape_me
 
 from modules.mongoHelper import MongoHelper
-from modules.parsingHelper import ParsingHelper
-from modules.recipe import Recipe
 
 class Crawler(object):
     _recipeBuffer = 100
-    _sleepTime = 2
+    _sleepTime = 1
     # _url is the visited links for the bfs
     _urls = set()
-    queue = []
+    _queue = []
 
     def __init__(self, website):
         self.website = website
@@ -24,20 +22,23 @@ class Crawler(object):
 
     # this method use bfs to crawl all the websites into _urls field
     def crawl(self):
-        self.queue.append(self.website.baseUrl)
         self._urls.add(self.website.baseUrl)
-        while self.queue:
-            href = self.queue.pop(0)
-            print('popped from queue ', href)
-            html_page = requests.get(href)
-            soup = BeautifulSoup(html_page.text, 'html.parser')
-            all_links = soup.find_all('a')
-            for link in all_links:
-                hrefNeighbor = link.get('href')
-                if hrefNeighbor and hrefNeighbor.find(self.website.baseUrl) == 0 and hrefNeighbor not in self._urls:
-                    print('is neighbor ', hrefNeighbor)
-                    self._urls.add(hrefNeighbor)
-                    self.queue.append(hrefNeighbor)
+        self._queue.append(self.website.baseUrl)
+        while self._queue:
+            try:
+                href = self._queue.pop(0)
+                print('Popped from queue: ', href)
+                html_page = requests.get(href)
+                soup = BeautifulSoup(html_page.text, 'html.parser')
+                all_links = soup.find_all('a')
+                for link in all_links:
+                    hrefNeighbor = link.get('href')
+                    if hrefNeighbor and hrefNeighbor.find(self.website.baseUrl) == 0 and hrefNeighbor not in self._urls:
+                        self._urls.add(hrefNeighbor)
+                        self._queue.append(hrefNeighbor)
+            except Exception as e:
+                print('Exception encountered while crawling: ', e)
+                continue
         
     def scrape(self):
         recipes = []
@@ -45,8 +46,9 @@ class Crawler(object):
             if MongoHelper.getRecipeByUrl(url).count() > 0:
                 print('Recipe is already in DB for URL:{}'.format(url))
                 continue
-   
+    
             scraper = scrape_me(url)
+
             if not self._isRecipe(scraper):
                 continue
             
@@ -75,16 +77,11 @@ class Crawler(object):
                 print('{} Recipes have been successfully written: {}'.format(Crawler._recipeBuffer, recipeIds))
 
             time.sleep(self._sleepTime) # Sleeping between requests to avoid limit
-    
+
     def _isRecipe(self, scraper):
         name = scraper.title()
         if len(name) == 0 or name == '' or name is None:
-            print('Could not find Recipe for URL: {}'.format(scraper.url))
-            return False
-
-        ingredients = scraper.ingredients()
-        if len(ingredients) == 0 or ingredients == '' or ingredients is None:
-            print('Could not find Ingredients for URL: {}'.format(scraper.url))
+            print('Could not find Name for URL: {}'.format(scraper.url))
             return False
 
         directions = scraper.instructions()
@@ -92,4 +89,9 @@ class Crawler(object):
             print('Could not find Directions for URL: {}'.format(scraper.url))
             return False
 
+        ingredients = scraper.ingredients()
+        if len(ingredients) == 0 or ingredients == '' or ingredients is None:
+            print('Could not find Ingredients for URL: {}'.format(scraper.url))
+            return False
+        
         return True

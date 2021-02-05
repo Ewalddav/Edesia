@@ -10,20 +10,24 @@ class Edesia(object):
         self.initCrawlers()
 
     def run(self):
+        processes = []
 
         for crawler in self.crawlers:
             p = Process(target=crawler.begin, args=())
+            processes.append(p)
             p.start()
+        
+        for p in processes:
             p.join()
 
     def initCrawlers(self):
-        allRecipes = Website('allrecipes', 'http://www.allrecipes.com', '/recipe/')
+        allRecipes = Website('allrecipes', 'https://www.allrecipes.com', '/recipe/')
         self.crawlers.append(Crawler(allRecipes))
 
-        foodRecipes = Website('food', 'http://www.food.com', '/recipe/')
+        foodRecipes = Website('food', 'https://www.food.com', '/recipe/')
         self.crawlers.append(Crawler(foodRecipes))
 
-        seriousEatsRecipes = Website('seriouseats', 'http://www.seriouseats.com/', '/recipes/')
+        seriousEatsRecipes = Website('seriouseats', 'https://www.seriouseats.com/', '/recipes/')
         self.crawlers.append(Crawler(seriousEatsRecipes))
 
 if __name__ == '__main__':
